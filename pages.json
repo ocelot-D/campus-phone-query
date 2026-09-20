@@ -1,0 +1,119 @@
+{
+  "pages": [
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "学生登录"
+      }
+    },
+    {
+      "path": "pages/adminLogin/adminLogin",
+      "style": {
+        "navigationBarTitleText": "管理员登录"
+      }
+    },
+    {
+      "path": "pages/adminManage/adminManage",
+      "style": {
+        "navigationBarTitleText": "管理后台"
+      }
+    },
+    {
+      "path": "pages/adminAdd/adminAdd",
+      "style": {
+        "navigationBarTitleText": "新增电话"
+      }
+    },
+    {
+      "path": "pages/adminEdit/adminEdit",
+      "style": {
+        "navigationBarTitleText": "编辑电话"
+      }
+    },
+    {
+      "path": "pages/adminFeedback/adminFeedback",
+      "style": {
+        "navigationBarTitleText": "学生反馈列表"
+      }
+    },
+    {
+      "path": "pages/feedback/feedback",
+      "style": {
+        "navigationBarTitleText": "意见反馈"
+      }
+    },
+    {
+      "path": "pages/myFeedback/myFeedback",
+      "style": {
+        "navigationBarTitleText": "我的反馈记录"
+      }
+    },
+    {
+      "path": "pages/register/register",
+      "style": {
+        "navigationBarTitleText": "注册"
+      }
+    },
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "校园电话"
+      }
+    },
+    {
+      "path": "pages/category/category",
+      "style": {
+        "navigationBarTitleText": "分类"
+      }
+    },
+    {
+      "path": "pages/collect/collect",
+      "style": {
+        "navigationBarTitleText": "我的收藏"
+      }
+    },
+    {
+      "path": "pages/my/my",
+      "style": {
+        "navigationBarTitleText": "个人中心"
+      }
+    }
+  ],
+  "tabBar": {
+    "color": "#666666",
+    "selectedColor": "#1677ff",
+    "borderStyle": "black",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "static/tabbar/home.png",
+        "selectedIconPath": "static/tabbar/home_active.png"
+      },
+      {
+        "pagePath": "pages/category/category",
+        "text": "分类",
+        "iconPath": "static/tabbar/cate.png",
+        "selectedIconPath": "static/tabbar/cate_active.png"
+      },
+      {
+        "pagePath": "pages/collect/collect",
+        "text": "收藏",
+        "iconPath": "static/tabbar/collect.png",
+        "selectedIconPath": "static/tabbar/collect_active.png"
+      },
+      {
+        "pagePath": "pages/my/my",
+        "text": "我的",
+        "iconPath": "static/tabbar/my.png",
+        "selectedIconPath": "static/tabbar/my_active.png"
+      }
+    ]
+  },
+  "globalStyle": {
+    "navigationBarTextStyle": "white",
+    "navigationBarBackgroundColor": "#1677ff",
+    "backgroundColor": "#f5f5f5"
+  }
+}
