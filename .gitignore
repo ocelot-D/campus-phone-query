@@ -1,0 +1,15 @@
+# 忽略依赖包
+node_modules/
+unpackage/
+
+# 忽略本地IDE和编译工具的配置
+.idea/
+.vscode/
+.hbuilderx/
+
+# 忽略微信开发者工具的私有配置（保护AppID等隐私）
+project.private.config.json
+
+# 忽略系统文件和日志
+.DS_Store
+*.log
