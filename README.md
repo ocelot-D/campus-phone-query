@@ -22,4 +22,4 @@
 克隆至本地后，使用 HBuilder X 运行至微信开发者工具进行预览。
 
 ## 项目预览
-![项目预览](./docs/preview.png)
+![项目预览](./docs/preview.jpg)
