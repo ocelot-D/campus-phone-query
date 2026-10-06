@@ -9,7 +9,6 @@
       <button class="btn-feedback" @click="goFeedbackList">查看学生反馈</button>
       <button class="btn-logout" @click="adminLogout">退出登录</button>
     </view>
-
     <!-- 电话列表 -->
     <scroll-view scroll-y class="phone-scroll">
       <view class="phone-item" v-for="item in phoneList" :key="item.id">
@@ -21,24 +20,22 @@
         </view>
         <view class="btn-group">
           <button size="mini" class="edit-btn" @click="goEditPage(item)">编辑</button>
+          <button size="mini" class="del-btn" @click="handleDelete(item)">删除</button>
         </view>
       </view>
     </scroll-view>
   </view>
 </template>
-
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { getPhoneAll, resetDefaultPhoneData, LOGIN_TYPE_KEY } from '../../api/api.js'
-
+import { getPhoneAll, deletePhone, resetDefaultPhoneData, LOGIN_TYPE_KEY } from '../../api/api.js'
 let phoneList = ref([])
 
-// 刷新列表
-const refreshList = () => {
-  phoneList.value = getPhoneAll()
+// 刷新列表（加了 async）
+const refreshList = async () => {
+  phoneList.value = await getPhoneAll()
 }
 
-// 监听全局数据变更，自动刷新
 onMounted(() => {
   refreshList()
   uni.$on('phoneDataChange', refreshList)
@@ -47,67 +44,75 @@ onUnmounted(() => {
   uni.$off('phoneDataChange', refreshList)
 })
 
-// 跳转到新增页面
 const goAddPage = () => {
-  uni.navigateTo({
-    url: '/pages/adminAdd/adminAdd'
-  })
+  uni.navigateTo({ url: '/pages/adminAdd/adminAdd' })
 }
 
-// 跳转到编辑页面，携带当前电话id
 const goEditPage = (item) => {
   uni.navigateTo({
     url: `/pages/adminEdit/adminEdit?id=${item.id}`
   })
 }
 
-// 跳转反馈列表
-const goFeedbackList = () => {
-  uni.navigateTo({url:'/pages/adminFeedback/adminFeedback'})
-}
-
-// 管理员退出登录
-const adminLogout = () => {
+// 删除电话（加了确认弹窗）
+const handleDelete = (item) => {
   uni.showModal({
-    title: '退出提示',
-    content: '确定退出管理员账号？',
-    success: res=>{
-      if(res.confirm){
-        uni.removeStorageSync(LOGIN_TYPE_KEY)
-        uni.reLaunch({url:'/pages/adminLogin/adminLogin'})
+    title: '确认删除',
+    content: `确定删除「${item.name}」吗？删除后不可恢复！`,
+    success: async res => {
+      if (res.confirm) {
+        await deletePhone(item.id)
+        uni.showToast({ title: '删除成功' })
+        uni.$emit('phoneDataChange')
+        refreshList()
       }
     }
   })
 }
 
-// 恢复默认数据
-const handleResetData = () => {
+const goFeedbackList = () => {
+  uni.navigateTo({ url: '/pages/adminFeedback/adminFeedback' })
+}
+
+const adminLogout = () => {
+  uni.showModal({
+    title: '退出提示',
+    content: '确定退出管理员账号？',
+    success: res => {
+      if (res.confirm) {
+        uni.removeStorageSync(LOGIN_TYPE_KEY)
+        uni.reLaunch({ url: '/pages/adminLogin/adminLogin' })
+      }
+    }
+  })
+}
+
+// 恢复默认数据（加了 async）
+const handleResetData = async () => {
   uni.showModal({
     title: '警告',
     content: '确定恢复系统默认电话数据？所有新增/修改内容将被清空，不可撤销！',
-    success: res => {
+    success: async res => {
       if (res.confirm) {
-        resetDefaultPhoneData()
+        await resetDefaultPhoneData()
         uni.showToast({ title: '已恢复默认数据' })
+        refreshList()
       }
     }
   })
 }
 </script>
-
 <style scoped>
 .admin-wrap {
   background: #f1f5f9;
   min-height: 100vh;
   padding: 24rpx;
 }
-
 .operate-box {
   display: flex;
   gap: 20rpx;
   margin-bottom: 30rpx;
 }
-
 .btn-add {
   flex: 1;
   height: 80rpx;
@@ -137,11 +142,9 @@ const handleResetData = () => {
   border-radius: 16rpx;
 }
 .btn-add::after,.btn-reset::after,.btn-feedback::after,.btn-logout::after{border:none;}
-
 .phone-scroll {
   height: calc(100vh - 300rpx);
 }
-
 .phone-item {
   background: #fff;
   border-radius: 20rpx;
@@ -173,10 +176,15 @@ const handleResetData = () => {
   margin-top: 8rpx;
   display: block;
 }
-
 .edit-btn {
   background: #3b82f6;
   color: #fff;
   border-radius: 12rpx;
+}
+.del-btn {
+  background: #ef4444;
+  color: #fff;
+  border-radius: 12rpx;
+  margin-top: 10rpx;
 }
 </style>

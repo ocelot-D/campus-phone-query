@@ -10,14 +10,17 @@
         <input v-model="form.tel" placeholder="020-xxxxxxx" />
       </view>
       <view class="form-item">
-        <text class="label">分类ID(1行政/2后勤/3院系/4安保)</text>
-        <input v-model.number="form.cateId" type="number" placeholder="输入数字1-4" />
+        <text class="label">分类</text>
+        <picker mode="selector" :range="cateOptions" range-key="name" @change="onCateChange">
+          <view class="picker-box">
+            {{ currentCateName }}
+          </view>
+        </picker>
       </view>
       <view class="form-item">
         <text class="label">简介描述</text>
         <textarea v-model="form.desc" placeholder="填写业务说明"></textarea>
       </view>
-
       <view class="btn-box">
         <button class="cancel-btn" @click="goBack">取消</button>
         <button class="submit-btn" @click="submitEdit">保存修改</button>
@@ -25,11 +28,9 @@
     </view>
   </view>
 </template>
-
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { getPhoneAll, editPhone } from '../../api/api.js'
-
 const form = ref({
   id: null,
   name: '',
@@ -38,40 +39,52 @@ const form = ref({
   desc: ''
 })
 
-onMounted(() => {
-  // 获取跳转携带的id参数
+// 分类选项
+const cateOptions = [
+  { id: 1, name: '行政办公' },
+  { id: 2, name: '后勤服务' },
+  { id: 3, name: '教学院系' },
+  { id: 4, name: '安保医疗' }
+]
+const currentCateName = computed(() => {
+  const item = cateOptions.find(c => c.id === form.value.cateId)
+  return item ? item.name : '请选择分类'
+})
+const onCateChange = (e) => {
+  form.value.cateId = cateOptions[e.detail.value].id
+}
+
+onMounted(async () => {
   const pages = getCurrentPages()
   const currPage = pages[pages.length - 1]
   const targetId = Number(currPage.options.id)
-
-  // 根据id查询数据回显
-  const allList = getPhoneAll()
+  // 加了 await
+  const allList = await getPhoneAll()
   const targetItem = allList.find(item => item.id === targetId)
   if (targetItem) {
     form.value = { ...targetItem }
   }
 })
 
-// 返回管理后台
 const goBack = () => {
   uni.navigateBack()
 }
 
-// 提交编辑修改
-const submitEdit = () => {
+// 提交编辑（加了 async）
+const submitEdit = async () => {
   const data = form.value
   if (!data.name || !data.tel || !data.cateId || !data.desc) {
     uni.showToast({ title: '请填写完整信息', icon: 'none' })
     return
   }
-  editPhone(data)
+  await editPhone(data)
   uni.showToast({ title: '修改成功' })
+  uni.$emit('phoneDataChange')  // 通知管理后台刷新列表
   setTimeout(() => {
     uni.navigateBack()
   }, 800)
 }
 </script>
-
 <style scoped>
 .form-wrap {
   background: #f1f5f9;
@@ -102,6 +115,15 @@ const submitEdit = () => {
 }
 .form-item textarea {
   height: 140rpx;
+}
+.picker-box {
+  width: 100%;
+  height: 80rpx;
+  line-height: 80rpx;
+  background: #f7f8fc;
+  border-radius: 14rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
 }
 .btn-box {
   display: flex;

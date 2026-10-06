@@ -10,14 +10,17 @@
         <input v-model="form.tel" placeholder="020-xxxxxxx" />
       </view>
       <view class="form-item">
-        <text class="label">分类ID(1行政/2后勤/3院系/4安保)</text>
-        <input v-model.number="form.cateId" type="number" placeholder="输入数字1-4" />
+        <text class="label">分类</text>
+        <picker mode="selector" :range="cateOptions" range-key="name" @change="onCateChange">
+          <view class="picker-box">
+            {{ currentCateName }}
+          </view>
+        </picker>
       </view>
       <view class="form-item">
         <text class="label">简介描述</text>
         <textarea v-model="form.desc" placeholder="填写业务说明"></textarea>
       </view>
-
       <view class="btn-box">
         <button class="cancel-btn" @click="goBack">取消</button>
         <button class="submit-btn" @click="submitAdd">保存新增</button>
@@ -25,11 +28,9 @@
     </view>
   </view>
 </template>
-
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { addNewPhone } from '../../api/api.js'
-
 const form = ref({
   name: '',
   tel: '',
@@ -37,26 +38,40 @@ const form = ref({
   desc: ''
 })
 
-// 返回管理后台
+// 分类选项
+const cateOptions = [
+  { id: 1, name: '行政办公' },
+  { id: 2, name: '后勤服务' },
+  { id: 3, name: '教学院系' },
+  { id: 4, name: '安保医疗' }
+]
+const currentCateName = computed(() => {
+  const item = cateOptions.find(c => c.id === form.value.cateId)
+  return item ? item.name : '请选择分类'
+})
+const onCateChange = (e) => {
+  form.value.cateId = cateOptions[e.detail.value].id
+}
+
 const goBack = () => {
   uni.navigateBack()
 }
 
-// 提交新增
-const submitAdd = () => {
+// 提交新增（加了 async）
+const submitAdd = async () => {
   const data = form.value
   if (!data.name || !data.tel || !data.cateId || !data.desc) {
     uni.showToast({ title: '请填写完整信息', icon: 'none' })
     return
   }
-  addNewPhone(data)
+  await addNewPhone(data)
   uni.showToast({ title: '新增成功' })
+  uni.$emit('phoneDataChange')  // 通知管理后台刷新列表
   setTimeout(() => {
     uni.navigateBack()
   }, 800)
 }
 </script>
-
 <style scoped>
 .form-wrap {
   background: #f1f5f9;
@@ -87,6 +102,15 @@ const submitAdd = () => {
 }
 .form-item textarea {
   height: 140rpx;
+}
+.picker-box {
+  width: 100%;
+  height: 80rpx;
+  line-height: 80rpx;
+  background: #f7f8fc;
+  border-radius: 14rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
 }
 .btn-box {
   display: flex;

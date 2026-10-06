@@ -24,8 +24,8 @@ import { getCollectList, delCollect } from '../../api/api.js'
 
 const collectList = ref([])
 
-const refreshList = () => {
-  collectList.value = getCollectList()
+const refreshList = async () => {
+  collectList.value = await getCollectList()
 }
 
 onMounted(() => {
@@ -41,8 +41,8 @@ const callPhone = (tel) => {
   uni.makePhoneCall({ phoneNumber: tel })
 }
 
-const cancelCollect = (id) => {
-  delCollect(id)
+const cancelCollect = async (id) => {
+  await delCollect(id)
   refreshList()
   uni.showToast({ title: '已取消收藏' })
 }

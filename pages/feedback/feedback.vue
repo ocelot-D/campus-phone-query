@@ -17,35 +17,31 @@
     </view>
   </view>
 </template>
-
 <script setup>
 import { ref, onMounted } from 'vue'
 import { submitFeedback } from '../../api/api.js'
-
 const stuId = ref('')
 const title = ref('')
 const content = ref('')
-
 onMounted(() => {
-  // 自动读取当前登录学号
   stuId.value = uni.getStorageSync('studentId')
 })
 
-const submit = () => {
+const submit = async () => {
   if (!title.value || !content.value) {
     uni.showToast({ title: '标题和内容不能为空', icon: 'none' })
     return
   }
-  submitFeedback({
+  // 把标题和内容合并提交（后端只有 content 字段）
+  await submitFeedback({
     stuId: stuId.value,
-    title: title.value,
-    content: content.value
+    content: '【' + title.value + '】' + content.value
   })
+  uni.$emit('feedbackChange')  // 通知反馈列表刷新
   uni.showToast({ title: '反馈提交成功！' })
   setTimeout(() => uni.navigateBack(), 1000)
 }
 </script>
-
 <style scoped>
 .wrap {
   background: #f1f5f9;
