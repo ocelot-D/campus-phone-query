@@ -1,25 +1,96 @@
-校园常用电话查询小程序
+# 校园电话查询小程序
 
-基于 UniApp + Vue.js 开发的一站式校园通讯录解决方案，解决校园各处室电话零散、紧急查询不便的痛点。
+一站式校园通讯录解决方案，解决校园各处电话零散、紧急查询不便的痛点。
 
-技术栈
+## 项目架构
 
-核心框架：UniApp + Vue.js
-开发工具：HBuilder X、微信开发者工具
-开发模式：微信小程序原生 + H5 混合开发
+本项目是一个完整的全栈项目，包含四大模块：
 
-功能模块
+```
+campus-phone-query/
+├── pages/          # 前端页面（UniApp + Vue 3）
+├── api/            # 前端请求封装
+├── backend/        # 后端 API（PHP + MySQL）
+├── tests/          # 接口自动化测试（pytest）
+└── monitor/        # 服务监控告警系统（Python）
+```
 
-用户端：学号登录/注册、分类展示、关键字检索、一键拨号、电话收藏、意见反馈。
-管理端：独立身份鉴权、通讯录数据动态维护与更新。
+## 技术栈
 
-架构说明
+| 层级 | 技术 |
+|---|---|
+| 前端 | UniApp + Vue 3 + 微信小程序原生 + H5 |
+| 后端 | PHP + MySQL + Apache |
+| 测试 | Python + pytest + requests + Allure |
+| 运维 | Python + requests + pymysql + 邮件告警 |
 
-目前数据层采用本地 Mock 数据实现前端闭环，若需连接后端数据库则需要克隆至本地后自行配置。
-已预留标准 RESTful API 接口，计划接入微信云开发或 Java 后端服务器。
+## 功能特性
 
-项目预览
-克隆至本地后，使用 HBuilder X 运行至微信开发者工具进行预览。
+### 用户端
+- 📞 电话分类展示（行政办公 / 后勤服务 / 教学院系 / 安保医疗）
+- 🔍 多维查询功能，快速定位目标联系方式
+- ⭐ 常用电话收藏功能，一键拨号
+- 📝 意见反馈提交
 
-## 项目预览
-![项目预览](./docs/preview.jpg)
+### 管理端
+- ➕ 电话条目新增、编辑、删除
+- 📊 学生反馈查看与处理
+- 🔄 数据一键恢复默认
+
+## 后端 API 文档
+
+### 认证模块
+| 接口 | 方法 | 说明 |
+|---|---|---|
+| `/auth.php?action=register` | POST | 学生注册 |
+| `/auth.php?action=login` | POST | 学生登录 |
+| `/auth.php?action=adminLogin` | POST | 管理员登录 |
+
+### 电话模块
+| 接口 | 方法 | 说明 |
+|---|---|---|
+| `/phones.php?action=list` | GET | 获取电话列表 |
+| `/phones.php?action=add` | POST | 新增电话 |
+| `/phones.php?action=edit` | POST | 编辑电话 |
+| `/phones.php?action=delete` | POST | 删除电话 |
+| `/phones.php?action=reset` | POST | 恢复默认数据 |
+
+### 收藏模块
+| 接口 | 方法 | 说明 |
+|---|---|---|
+| `/favorites.php?action=list` | GET | 获取收藏列表 |
+| `/favorites.php?action=add` | POST | 添加收藏 |
+| `/favorites.php?action=remove` | POST | 取消收藏 |
+
+### 反馈模块
+| 接口 | 方法 | 说明 |
+|---|---|---|
+| `/feedback.php?action=list` | GET | 获取反馈列表 |
+| `/feedback.php?action=submit` | POST | 提交反馈 |
+
+## 测试
+
+```bash
+cd tests
+pip install -r requirements.txt
+pytest
+```
+
+15 个测试用例，覆盖认证、电话、收藏三大模块。
+
+## 监控
+
+```bash
+cd monitor
+pip install -r requirements.txt
+python monitor.py
+```
+
+定时监控 API 健康状态和数据库连通性，异常自动邮件告警。
+
+## 本地部署
+
+1. 导入 `backend/sql/init.sql` 到 MySQL
+2. 配置 `backend/config/database.php` 数据库连接
+3. 将 `backend/` 放入 Apache 网站目录
+4. 前端使用 HBuilder X 打开，修改 `api/api.js` 中的 `BASE_URL`
