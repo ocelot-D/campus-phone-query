@@ -90,7 +90,7 @@ onMounted(() => {
   if (id) uni.switchTab({ url: '/pages/index/index' })
 })
 
-const handleLogin = () => {
+const handleLogin = async () => {
   // 重新执行一次实时校验，同步清空合法输入的提示
   checkStu()
   checkPwd()
@@ -105,8 +105,8 @@ const handleLogin = () => {
     uni.showModal({ title:'提示',content:'请修正输入格式',showCancel:false })
     return
   }
-  // 校验全部通过，执行登录接口
-  let res = checkLogin(stuId.value, password.value)
+  // 校验全部通过，执行登录接口（加了 await）
+  let res = await checkLogin(stuId.value, password.value)
   if (res.success) {
     uni.showToast({ title: '登录成功', icon: 'success' })
     uni.setStorageSync('studentId', stuId.value)

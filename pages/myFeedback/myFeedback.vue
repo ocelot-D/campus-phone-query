@@ -6,10 +6,8 @@
         <button class="go-submit-btn" @click="goSubmitFeedback">前往提交反馈</button>
       </view>
       <view class="item" v-for="item in myFeedbackList" :key="item.id">
-        <view class="line"><text>反馈标题：</text>{{item.title}}</view>
-        <view class="line"><text>反馈内容：</text>{{item.content}}</view>
-        <view class="time">{{item.time}}</view>
-        <!-- 状态标签，和管理员颜色一致 -->
+        <view class="line"><text>反馈内容：</text>{{ item.content }}</view>
+        <view class="time">{{ item.time }}</view>
         <view class="status-tag" :class="getStatusClass(item.status)">
           当前处理状态：{{ item.status }}
         </view>
@@ -17,44 +15,35 @@
     </scroll-view>
   </view>
 </template>
-
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { getFeedbackList } from '../../api/api.js'
-
 const myFeedbackList = ref([])
-let studentStuId = ref('')
 
-// 筛选当前学生自己的反馈
-const refreshMyFeedback = () => {
-  studentStuId.value = uni.getStorageSync('studentId')
-  const allFeedback = getFeedbackList()
-  // 只展示和当前学号匹配的反馈
-  myFeedbackList.value = allFeedback.filter(item => item.stuId === studentStuId.value)
+const refreshMyFeedback = async () => {
+  const stuId = uni.getStorageSync('studentId')
+  // 直接传 stuId，后端只返回当前学生的反馈
+  myFeedbackList.value = await getFeedbackList(stuId)
 }
 
 onMounted(() => {
   refreshMyFeedback()
-  // 监听反馈状态变更，自动刷新
   uni.$on('feedbackChange', refreshMyFeedback)
 })
 onUnmounted(() => {
   uni.$off('feedbackChange', refreshMyFeedback)
 })
 
-// 跳转提交反馈页面
 const goSubmitFeedback = () => {
   uni.navigateTo({ url: '/pages/feedback/feedback' })
 }
 
-// 匹配状态样式
 const getStatusClass = (status) => {
-  if(status === '等待解决') return 'tag-wait'
-  if(status === '正在处理') return 'tag-doing'
-  if(status === '已处理') return 'tag-done'
+  if (status === '等待解决') return 'tag-wait'
+  if (status === '正在处理') return 'tag-doing'
+  if (status === '已处理') return 'tag-done'
 }
 </script>
-
 <style scoped>
 .wrap {
   background: #f1f5f9;

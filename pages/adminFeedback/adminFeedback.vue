@@ -1,18 +1,15 @@
 <template>
   <view class="wrap">
-    <button class="clear-btn" v-if="list.length>0" @click="clearAll">清空全部反馈</button>
+    <button class="clear-btn" v-if="list.length > 0" @click="clearAll">清空全部反馈</button>
     <scroll-view scroll-y class="scroll">
       <view class="empty" v-if="list.length === 0">暂无学生反馈</view>
       <view class="item" v-for="item in list" :key="item.id">
-        <view class="line"><text>学号：</text>{{item.stuId}}</view>
-        <view class="line"><text>标题：</text>{{item.title}}</view>
-        <view class="line"><text>内容：</text>{{item.content}}</view>
-        <view class="time">{{item.time}}</view>
-        <!-- 新增状态展示 -->
+        <view class="line"><text>学号：</text>{{ item.stuId }}</view>
+        <view class="line"><text>内容：</text>{{ item.content }}</view>
+        <view class="time">{{ item.time }}</view>
         <view class="status-tag" :class="getStatusClass(item.status)">
           当前状态：{{ item.status }}
         </view>
-        <!-- 快捷回复/状态切换按钮 -->
         <view class="status-btn-group">
           <button size="mini" class="btn-wait" @click="setState(item.id, '等待解决')">等待解决</button>
           <button size="mini" class="btn-doing" @click="setState(item.id, '正在处理')">正在处理</button>
@@ -22,15 +19,13 @@
     </scroll-view>
   </view>
 </template>
-
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { getFeedbackList, clearAllFeedback, changeFeedbackStatus } from '../../api/api.js'
-
 const list = ref([])
 
-const refresh = () => {
-  list.value = getFeedbackList()
+const refresh = async () => {
+  list.value = await getFeedbackList()  // 不传参数 = 管理员看全部
 }
 
 onMounted(() => {
@@ -41,34 +36,36 @@ onUnmounted(() => {
   uni.$off('feedbackChange', refresh)
 })
 
-// 修改反馈状态
-const setState = (id, status) => {
-  changeFeedbackStatus(id, status)
+// 修改反馈状态（加了 async）
+const setState = async (id, status) => {
+  await changeFeedbackStatus(id, status)
   uni.showToast({ title: `已标记为${status}` })
+  uni.$emit('feedbackChange')  // 通知刷新
+  refresh()
 }
 
-// 清空全部反馈
+// 清空全部反馈（加了 async）
 const clearAll = () => {
   uni.showModal({
     title: '确认清空',
     content: '所有反馈记录将全部删除，不可恢复，确定吗？',
-    success: res => {
-      if(res.confirm){
-        clearAllFeedback()
-        uni.showToast({title:'已清空反馈'})
+    success: async res => {
+      if (res.confirm) {
+        await clearAllFeedback()
+        uni.showToast({ title: '已清空反馈' })
+        uni.$emit('feedbackChange')
+        refresh()
       }
     }
   })
 }
 
-// 根据状态返回样式类
 const getStatusClass = (status) => {
-  if(status === '等待解决') return 'tag-wait'
-  if(status === '正在处理') return 'tag-doing'
-  if(status === '已处理') return 'tag-done'
+  if (status === '等待解决') return 'tag-wait'
+  if (status === '正在处理') return 'tag-doing'
+  if (status === '已处理') return 'tag-done'
 }
 </script>
-
 <style scoped>
 .wrap {
   background: #f1f5f9;
@@ -112,7 +109,6 @@ const getStatusClass = (status) => {
   font-size: 24rpx;
   color: #999;
 }
-/* 状态标签样式 */
 .status-tag {
   margin: 20rpx 0;
   padding: 10rpx 20rpx;
@@ -132,7 +128,6 @@ const getStatusClass = (status) => {
   background: #dcfce7;
   color: #16a34a;
 }
-/* 状态按钮组 */
 .status-btn-group {
   display: flex;
   gap: 16rpx;

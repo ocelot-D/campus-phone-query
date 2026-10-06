@@ -36,7 +36,7 @@ import { getPhoneAll, addCollect as addCollectApi } from '../../api/api.js'
 
 const searchVal = ref('')
 const activeCate = ref(0)
-const phoneList = ref(getPhoneAll())
+const phoneList = ref([])  // 改成空数组，等 onMounted 里异步加载
 
 const cateList = ref([
   { id: 0, name: '全部' },
@@ -46,12 +46,13 @@ const cateList = ref([
   { id: 4, name: '安保医疗' }
 ])
 
-// 刷新电话列表
-const refreshPhone = () => {
-  phoneList.value = getPhoneAll()
+// 刷新电话列表（改成 async）
+const refreshPhone = async () => {
+  phoneList.value = await getPhoneAll()
 }
 
 onMounted(() => {
+  refreshPhone()  // 页面加载时从后端拉数据
   uni.$on('phoneDataChange', refreshPhone)
 })
 onUnmounted(() => {
@@ -81,8 +82,8 @@ const makeCall = (tel) => {
   uni.makePhoneCall({ phoneNumber: tel })
 }
 
-const handleAddCollect = (item) => {
-  let res = addCollectApi(item)
+const handleAddCollect = async (item) => {
+  let res = await addCollectApi(item)
   if (res) {
     uni.showToast({ title: '收藏成功', icon: 'success' })
     uni.$emit('collectChange')

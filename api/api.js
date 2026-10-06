@@ -1,237 +1,180 @@
-// 校园电话查询接口封装
+// ============================================
+// 校园电话查询接口封装（后端 API 版）
+// 使用方法：替换项目中原有的 api/api.js 文件
+// 使用前请修改下面的 BASE_URL 为你的后端地址
+// ============================================
 
-// 原始默认基础数据（恢复默认使用）
-const DEFAULT_PHONE_DATA = [{
-  id: 1,
-  cateId: 1,
-  name: '教务处',
-  tel: '020-12345678',
-  desc: '学籍、选课、成绩咨询'
-},
-{
-  id: 2,
-  cateId: 1,
-  name: '学生处',
-  tel: '020-12345679',
-  desc: '奖助学金、违纪处分'
-},
-{
-  id: 3,
-  cateId: 2,
-  name: '宿管中心',
-  tel: '020-12345680',
-  desc: '宿舍报修、钥匙补办'
-},
-{
-  id: 4,
-  cateId: 2,
-  name: '食堂服务台',
-  tel: '020-12345681',
-  desc: '餐饮投诉、卫生建议'
-},
-{
-  id: 5,
-  cateId: 3,
-  name: '计算机学院',
-  tel: '020-12345682',
-  desc: '教学安排、实验室管理'
-},
-{
-  id: 6,
-  cateId: 4,
-  name: '校医务室',
-  tel: '020-12345683',
-  desc: '常见病就诊、药品领取'
-},
-{
-  id: 7,
-  cateId: 4,
-  name: '保卫处',
-  tel: '020-12345684',
-  desc: '校园安全、失物招领、门禁'
-}]
+// TODO: 修改为你的后端地址（PhpStudy 部署后的路径）
+const BASE_URL = 'http://localhost/campus-phone-backend/api'
 
-// 电话本地存储key
-const PHONE_STORAGE_KEY = 'phoneDataList'
+// ===================== 底层请求封装 =====================
 
-// 反馈存储key
-const FEEDBACK_KEY = 'feedbackList'
-
-// 获取全部校园电话数据（优先读取本地缓存，无则加载默认）
-export function getPhoneAll() {
-  let local = uni.getStorageSync(PHONE_STORAGE_KEY)
-  if (!local || local.length === 0) {
-    uni.setStorageSync(PHONE_STORAGE_KEY, DEFAULT_PHONE_DATA)
-    return DEFAULT_PHONE_DATA
-  }
-  return local
-}
-
-// 保存电话数据到本地缓存（所有增改操作统一调用）
-function savePhoneData(list) {
-  uni.setStorageSync(PHONE_STORAGE_KEY, list)
-  // 全局广播数据变更，所有页面自动刷新
-  uni.$emit('phoneDataChange')
-}
-
-// 管理员：恢复默认原始数据
-export function resetDefaultPhoneData() {
-  savePhoneData(DEFAULT_PHONE_DATA)
-  return true
-}
-
-// 管理员：新增电话
-export function addNewPhone(item) {
-  let list = getPhoneAll()
-  // 自动生成最大id
-  const maxId = list.length > 0 ? Math.max(...list.map(i => i.id)) : 0
-  item.id = maxId + 1
-  list.push(item)
-  savePhoneData(list)
-  return true
-}
-
-// 管理员：编辑修改已有电话
-export function editPhone(editItem) {
-  let list = getPhoneAll()
-  list = list.map(item => {
-    if (item.id === editItem.id) return editItem
-    return item
+function request(path, method = 'GET', data = {}) {
+  return new Promise((resolve, reject) => {
+    uni.request({
+      url: BASE_URL + path,
+      method: method,
+      data: data,
+      header: { 'Content-Type': 'application/json' },
+      success: (res) => {
+        resolve(res.data)
+      },
+      fail: (err) => {
+        console.error('请求失败:', path, err)
+        uni.showToast({ title: '网络请求失败', icon: 'none' })
+        reject(err)
+      }
+    })
   })
-  savePhoneData(list)
-  return true
 }
 
-// 收藏电话（保存到本地）
-export function addCollect(phone) {
-  let list = uni.getStorageSync('collectList') || []
-  // 避免重复收藏
-  let has = list.some(item => item.id === phone.id)
-  if (!has) {
-    list.push(phone)
-    uni.setStorageSync('collectList', list)
-    uni.$emit('collectChange')
-    return true
-  }
-  return false
+// ===================== 电话相关 =====================
+
+/**
+ * 获取全部校园电话
+ * 返回：[{id, cateId, name, tel, desc}]
+ */
+export async function getPhoneAll() {
+  return await request('/phones.php?action=list')
 }
 
-// 取消收藏
-export function delCollect(id) {
-  let list = uni.getStorageSync('collectList') || []
-  list = list.filter(item => item.id !== id)
-  uni.setStorageSync('collectList', list)
-  uni.$emit('collectChange')
+/**
+ * 管理员：新增电话
+ * 参数：{cateId, name, tel, desc}
+ */
+export async function addNewPhone(item) {
+  return await request('/phones.php?action=add', 'POST', item)
 }
 
-// 获取我的收藏
-export function getCollectList() {
-  return uni.getStorageSync('collectList') || []
-
+/**
+ * 管理员：编辑电话
+ * 参数：{id, cateId, name, tel, desc}
+ */
+export async function editPhone(editItem) {
+  return await request('/phones.php?action=edit', 'POST', editItem)
 }
 
-// ===================== 反馈相关接口 =====================
-// 提交学生反馈
-export function submitFeedback(info) {
-  let list = uni.getStorageSync(FEEDBACK_KEY) || []
-  const maxId = list.length > 0 ? Math.max(...list.map(i => i.id)) : 0
-  info.id = maxId + 1
-  info.time = new Date().toLocaleString()
-  // 新增默认状态：等待解决
-  info.status = "等待解决"
-  list.push(info)
-  uni.setStorageSync(FEEDBACK_KEY, list)
-  uni.$emit('feedbackChange')
-  return true
+/**
+ * 管理员：删除电话
+ * 参数：id
+ */
+export async function deletePhone(id) {
+  return await request('/phones.php?action=delete', 'POST', { id: id })
 }
 
-// 获取全部反馈（管理员查看）
-export function getFeedbackList() {
-  return uni.getStorageSync(FEEDBACK_KEY) || []
+/**
+ * 管理员：恢复默认数据
+ */
+export async function resetDefaultPhoneData() {
+  return await request('/phones.php?action=reset', 'POST')
 }
 
-// 修改反馈处理状态
-export function changeFeedbackStatus(feedbackId, newStatus) {
-  let list = getFeedbackList()
-  list = list.map(item => {
-    if(item.id === feedbackId){
-      item.status = newStatus
-    }
-    return item
+// ===================== 收藏相关 =====================
+
+/**
+ * 收藏电话
+ * 参数 phone: {id, cateId, name, tel, desc}
+ * 返回：true=收藏成功, false=已收藏过了
+ */
+export async function addCollect(phone) {
+  const stuId = uni.getStorageSync('studentId')
+  return await request('/favorites.php?action=add', 'POST', {
+    stuId: stuId,
+    phone: phone
   })
-  uni.setStorageSync(FEEDBACK_KEY, list)
-  uni.$emit('feedbackChange')
 }
 
-// 清空所有反馈（管理员功能）
-export function clearAllFeedback() {
-  uni.removeStorageSync(FEEDBACK_KEY)
-  uni.$emit('feedbackChange')
-}
-// ===================== 用户注册、登录相关接口（学生） =====================
-const USER_KEY = 'userInfoList'
-
-// 获取已注册学生用户列表
-export function getUserList() {
-  return uni.getStorageSync(USER_KEY) || []
-}
-
-// 学生注册
-export function registerUser(user) {
-  let userList = getUserList()
-  let isExist = userList.some(item => item.stuId === user.stuId)
-  if (isExist) {
-    return {
-      success: false,
-      msg: '该学号已注册，请直接登录'
-    }
-  }
-  userList.push(user)
-  uni.setStorageSync(USER_KEY, userList)
-  return {
-    success: true,
-    msg: '注册成功，请前往登录'
-  }
+/**
+ * 取消收藏
+ * 参数 id: 电话ID
+ */
+export async function delCollect(id) {
+  const stuId = uni.getStorageSync('studentId')
+  return await request('/favorites.php?action=remove', 'POST', {
+    stuId: stuId,
+    id: id
+  })
 }
 
-// 学生登录校验
-export function checkLogin(stuId, password) {
-  let userList = getUserList()
-  let user = userList.find(item => item.stuId === stuId && item.password === password)
-  if (user) {
-    return {
-      success: true,
-      user: user
-    }
-  }
-  return {
-    success: false,
-    msg: '学号或密码错误'
-  }
+/**
+ * 获取我的收藏列表
+ */
+export async function getCollectList() {
+  const stuId = uni.getStorageSync('studentId')
+  return await request('/favorites.php?action=list&stuId=' + stuId)
 }
 
-// ===================== 管理员账户接口（独立体系） =====================
-const ADMIN_STORAGE_KEY = 'adminAccount'
+// ===================== 反馈相关 =====================
 
-// 默认管理员账号：admin / 123456
-export function getAdminAccount() {
-  let admin = uni.getStorageSync(ADMIN_STORAGE_KEY)
-  if (!admin) {
-    const defaultAdmin = { adminId: 'admin', pwd: '123456', name: '系统管理员' }
-    uni.setStorageSync(ADMIN_STORAGE_KEY, defaultAdmin)
-    return defaultAdmin
-  }
-  return admin
+/**
+ * 提交学生反馈
+ * 参数 info: {stuId, content, contact}
+ */
+export async function submitFeedback(info) {
+  return await request('/feedback.php?action=submit', 'POST', info)
 }
 
-// 管理员登录校验
-export function checkAdminLogin(adminId, pwd) {
-  const admin = getAdminAccount()
-  if (admin.adminId === adminId && admin.pwd === pwd) {
-    return { success: true, admin }
-  }
-  return { success: false, msg: '管理员账号或密码错误' }
+/**
+ * 获取反馈列表
+ * 不传参数 = 管理员看全部；传 stuId = 学生只看自己的
+ */
+export async function getFeedbackList(stuId) {
+  let url = '/feedback.php?action=list'
+  if (stuId) url += '&stuId=' + stuId
+  return await request(url)
 }
 
-// 存储登录身份标识
+/**
+ * 修改反馈处理状态（管理员）
+ */
+export async function changeFeedbackStatus(feedbackId, newStatus) {
+  return await request('/feedback.php?action=status', 'POST', {
+    id: feedbackId,
+    status: newStatus
+  })
+}
+
+/**
+ * 清空所有反馈（管理员）
+ */
+export async function clearAllFeedback() {
+  return await request('/feedback.php?action=clear', 'POST')
+}
+
+// ===================== 学生注册、登录 =====================
+
+/**
+ * 学生注册
+ * 参数 user: {stuId, password, userName}
+ * 返回：{success: true/false, msg: '...'}
+ */
+export async function registerUser(user) {
+  return await request('/auth.php?action=register', 'POST', user)
+}
+
+/**
+ * 学生登录校验
+ * 返回：{success: true/false, user: {stuId, userName}, msg: '...'}
+ */
+export async function checkLogin(stuId, password) {
+  return await request('/auth.php?action=login', 'POST', {
+    stuId: stuId,
+    password: password
+  })
+}
+
+// ===================== 管理员账户 =====================
+
+/**
+ * 管理员登录校验
+ * 返回：{success: true/false, admin: {...}, msg: '...'}
+ */
+export async function checkAdminLogin(adminId, pwd) {
+  return await request('/auth.php?action=adminLogin', 'POST', {
+    adminId: adminId,
+    pwd: pwd
+  })
+}
+
+// ===================== 常量 =====================
 export const LOGIN_TYPE_KEY = 'loginType' // student / admin

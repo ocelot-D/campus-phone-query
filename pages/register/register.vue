@@ -130,7 +130,7 @@ const checkConfirmPwd = () => {
 }
 
 // 提交注册兜底校验
-const handleRegister = () => {
+const handleRegister = async () => {
   // 重新执行校验，清空合法输入的提示
   checkStu()
   checkPwd()
@@ -146,7 +146,7 @@ const handleRegister = () => {
     return
   }
 
-  let res = registerUser({
+  let res = await registerUser({
     stuId: stuId.value,
     userName: userName.value,
     password: password.value
