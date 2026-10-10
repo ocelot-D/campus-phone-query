@@ -94,3 +94,5 @@ python monitor.py
 2. 配置 `backend/config/database.php` 数据库连接
 3. 将 `backend/` 放入 Apache 网站目录
 4. 前端使用 HBuilder X 打开，修改 `api/api.js` 中的 `BASE_URL`
+
+![小程序预览图](./static/tabbar/preview.png)
