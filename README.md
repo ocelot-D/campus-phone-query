@@ -95,4 +95,5 @@ python monitor.py
 3. 将 `backend/` 放入 Apache 网站目录
 4. 前端使用 HBuilder X 打开，修改 `api/api.js` 中的 `BASE_URL`
 
+小程序预览图：
 ![小程序预览图](./docs/preview.jpg)
