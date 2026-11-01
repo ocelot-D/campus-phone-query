@@ -1,11 +1,15 @@
 // ============================================
-// 校园电话查询接口封装（后端 API 版）
-// 使用方法：替换项目中原有的 api/api.js 文件
-// 使用前请修改下面的 BASE_URL 为你的后端地址
+// 校园电话查询接口封装
+// 后端地址只需要改下面 BASE_URL 这一行
 // ============================================
 
-// TODO: 修改为你的后端地址（PhpStudy 部署后的路径）
+// 换电脑、换端口、换部署目录名，只改这一行
+// 用微信小程序跑时：这个地址必须是本机能访问的 http 地址，
+// 并且在微信开发者工具「详情 / 本地设置」里勾上「不校验合法域名、web-view、TLS 版本以及 HTTPS 证书」
 const BASE_URL = 'http://localhost/campus-phone-backend/api'
+
+// 超时时间（毫秒）。不设的话默认等 60 秒，后端没启动时界面像卡死
+const TIMEOUT = 10000
 
 // ===================== 底层请求封装 =====================
 
@@ -15,13 +19,23 @@ function request(path, method = 'GET', data = {}) {
       url: BASE_URL + path,
       method: method,
       data: data,
+      timeout: TIMEOUT,
       header: { 'Content-Type': 'application/json' },
       success: (res) => {
+        // 原来不判断状态码：Apache 返回 404 时 res.data 是一段 HTML 文本，
+        // 页面把它当数组渲染，报错却看不出是地址写错，所以这里显式拦掉
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          console.error('[接口状态码异常]', res.statusCode, BASE_URL + path)
+          uni.showToast({ title: '接口异常 ' + res.statusCode, icon: 'none', duration: 3000 })
+          reject(new Error('HTTP ' + res.statusCode + ' ' + path))
+          return
+        }
         resolve(res.data)
       },
       fail: (err) => {
-        console.error('请求失败:', path, err)
-        uni.showToast({ title: '网络请求失败', icon: 'none' })
+        // 原来只提示「网络请求失败」，看不出是后端没启动，这里把地址一起打到控制台
+        console.error('[请求失败]', BASE_URL + path, err)
+        uni.showToast({ title: '连不上后端服务', icon: 'none', duration: 3000 })
         reject(err)
       }
     })
