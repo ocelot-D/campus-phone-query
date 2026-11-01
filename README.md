@@ -17,7 +17,7 @@ campus-phone-query/
 
 | 层级 | 技术 |
 |---|---|
-| 前端 | UniApp + Vue 3 + 微信小程序原生 + H5 |
+| 前端 | UniApp + Vue 3，一套代码编译到微信小程序和 H5 两端 |
 | 后端 | PHP + MySQL + Apache |
 
 ### 功能特性
@@ -68,12 +68,14 @@ campus-phone-query/
 |---|---|---|
 | `/feedback.php?action=list` | GET | 获取反馈列表 |
 | `/feedback.php?action=submit` | POST | 提交反馈 |
+| `/feedback.php?action=status` | POST | 修改反馈处理状态 |
+| `/feedback.php?action=clear` | POST | 清空全部反馈 |
 
 ### 本地部署
 
 1. 导入 `backend/sql/init.sql` 到 MySQL
 2. 配置 `backend/config/database.php` 数据库连接
-3. 将 `backend/` 放入 Apache 网站目录
+3. 将 `backend/` 放入 Apache 网站目录并重命名为 campus-phone-backend
 4. 前端使用 HBuilder X 打开，修改 `api/api.js` 中的 `BASE_URL`
 
 ### 小程序预览图：
